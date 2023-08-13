@@ -1,0 +1,7 @@
+numpy
+opencv_python
+Pillow
+Requests
+selenium
+ultralytics
+webdriver_manager
