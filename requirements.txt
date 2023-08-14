@@ -1,7 +1,7 @@
-numpy
-opencv_python
-Pillow
-Requests
-selenium
-ultralytics
-webdriver_manager
+numpy==1.25.2
+opencv_python==4.8.0.76
+Pillow==10.0.0
+Requests==2.31.0
+selenium==4.11.2
+ultralytics==8.0.153
+webdriver_manager==4.0.0
