@@ -48,31 +48,25 @@ def get_target_num(driver):
     target = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
         (By.XPATH, '//div[@id="rc-imageselect"]//strong')))
 
-    if re.search(r"bicycle", target.text) != None:
-        return 1
-    elif re.search(r"bus", target.text) != None:
-        return 5
-    elif re.search(r"tractor", target.text) != None:
-        return 7
-    elif re.search(r"boat", target.text) != None:
-        return 8
-    elif re.search(r"car", target.text) != None:
-        return 2
-    elif re.search(r"hydrant", target.text) != None:
-        return 10
-    elif re.search(r"motorcycle", target.text) != None:
-        return 3
-    elif re.search(r"traffic", target.text) != None:
-        return 9
-    elif re.search(r"crosswalk", target.text) != None:
-        return 1001
-    elif re.search(r"stair", target.text) != None:
-        return 1002
-    elif re.search(r"taxi", target.text) != None:
-        return 1003
-    else:
-        return 1000
+    target_mapping = {
+        "bicycle": 1,
+        "bus": 5,
+        "tractor": 7,
+        "boat": 8,
+        "car": 2,
+        "hydrant": 10,
+        "motorcycle": 3,
+        "traffic": 9,
+        "crosswalk": 1001,
+        "stair": 1002,
+        "taxi": 1003
+    }
 
+    for key, value in target_mapping.items():
+        if re.search(key, target.text) is not None:
+            return value
+
+    return 1000
 
 def get_answers(target_num,timestamp):
     image = Image.open(images_directory.joinpath(f"0-{timestamp}.png"))
