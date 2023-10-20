@@ -179,26 +179,19 @@ def get_all_new_dynamic_captcha_img_urls(answers, before_img_urls, driver):
         return is_new, img_urls
 
 
-def paste_new_img_on_main_img(main, new, loc,timestamp):
+def paste_new_img_on_main_img(main, new, loc, timestamp):
     paste = np.copy(main)
-    if loc == 1:
-        paste[0:100, 0:100] = new
-    elif loc == 2:
-        paste[0:100, 100:200] = new
-    elif loc == 3:
-        paste[0:100, 200:300] = new
-    elif loc == 4:
-        paste[100:200, 0:100] = new
-    elif loc == 5:
-        paste[100:200, 100:200] = new
-    elif loc == 6:
-        paste[100:200, 200:300] = new
-    elif loc == 7:
-        paste[200:300, 0:100] = new
-    elif loc == 8:
-        paste[200:300, 100:200] = new
-    elif loc == 9:
-        paste[200:300, 200:300] = new
+
+    section_sizes = {
+        1: (0, 0), 2: (0, 1), 3: (0, 2),
+        4: (1, 0), 5: (1, 1), 6: (1, 2),
+        7: (2, 0), 8: (2, 1), 9: (2, 2)
+    }
+
+    section_row, section_col = section_sizes.get(loc, (0, 0))
+    height, width = paste.shape[0] // 3, paste.shape[1] // 3
+    start_row, start_col = section_row * height, section_col * width
+    paste[start_row:start_row + height, start_col:start_col + width] = new
 
     paste = cv2.cvtColor(paste, cv2.COLOR_RGB2BGR)
     cv2.imwrite(str(images_directory.joinpath(f'0-{timestamp}.png')), paste)
