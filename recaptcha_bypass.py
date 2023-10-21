@@ -276,52 +276,33 @@ def get_answers_4(target_num,timestamp):
             xys = [x1, y1, x2, y2, x3, y3, x4, y4]
 
             four_cells = []
-            for i in range(4):
-                x = xys[i*2]
-                y = xys[(i*2)+1]
+            for i in target_index:
+                target_box = boxes[i]
+                p1, p2 = (int(target_box[0]), int(target_box[1])), (int(target_box[2]), int(target_box[3]))
+                x1, y1 = p1
+                x4, y4 = p2
 
-                if x < 112.5 and y < 112.5:
-                    four_cells.append(1)
-                if 112.5 < x < 225 and y < 112.5:
-                    four_cells.append(2)
-                if 225 < x < 337.5 and y < 112.5:
-                    four_cells.append(3)
-                if 337.5 < x <= 450 and y < 112.5:
-                    four_cells.append(4)
+                x2 = x4
+                y2 = y1
+                x3 = x1
+                y3 = y4
 
-                if x < 112.5 and 112.5 < y < 225:
-                    four_cells.append(5)
-                if 112.5 < x < 225 and 112.5 < y < 225:
-                    four_cells.append(6)
-                if 225 < x < 337.5 and 112.5 < y < 225:
-                    four_cells.append(7)
-                if 337.5 < x <= 450 and 112.5 < y < 225:
-                    four_cells.append(8)
+                four_cells = []
 
-                if x < 112.5 and 225 < y < 337.5:
-                    four_cells.append(9)
-                if 112.5 < x < 225 and 225 < y < 337.5:
-                    four_cells.append(10)
-                if 225 < x < 337.5 and 225 < y < 337.5:
-                    four_cells.append(11)
-                if 337.5 < x <= 450 and 225 < y < 337.5:
-                    four_cells.append(12)
+                for i in range(4):
+                    x = xys[i * 2]
+                    y = xys[(i * 2) + 1]
+                    cell_size = image.shape[1] / 4
+                    row = int(y / cell_size)
+                    column = int(x / cell_size)
+                    cell_number = row * 4 + column + 1
+                    four_cells.append(cell_number)
 
-                if x < 112.5 and 337.5 < y <= 450:
-                    four_cells.append(13)
-                if 112.5 < x < 225 and 337.5 < y <= 450:
-                    four_cells.append(14)
-                if 225 < x < 337.5 and 337.5 < y <= 450:
-                    four_cells.append(15)
-                if 337.5 < x <= 450 and 337.5 < y <= 450:
-                    four_cells.append(16)
-            answer = get_occupied_cells(four_cells)
-            count += 1
-            for ans in answer:
-                answers.append(ans)
+                answer = get_occupied_cells(four_cells)
+                for ans in answer:
+                    answers.append(ans)
         answers = sorted(list(answers))
         return list(set(answers))
-
 
 def solve_recaptcha(driver):
     go_to_recaptcha_iframe1(driver)
