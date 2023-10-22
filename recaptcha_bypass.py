@@ -5,6 +5,7 @@ import random
 import requests
 import numpy as np
 from PIL import Image
+from math import ceil
 from pathlib import Path
 from ultralytics import YOLO
 from datetime import datetime
@@ -291,8 +292,8 @@ def get_answers_4(target_num, timestamp):
                     x = xys[i * 2]
                     y = xys[(i * 2) + 1]
                     cell_size = image.shape[1] / 4
-                    row = int(y / cell_size)
-                    column = int(x / cell_size)
+                    row = ceil(y / cell_size)
+                    column = ceil(x / cell_size)
                     cell_number = (row - 1) * 4 + column
                     four_cells.append(cell_number)
 
