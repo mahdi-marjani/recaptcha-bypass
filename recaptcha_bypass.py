@@ -310,7 +310,7 @@ def solve_recaptcha(driver):
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
         (By.XPATH, '//div[@class="recaptcha-checkbox-border"]'))).click()
 
-    go_to_recaptcha_iframe(driver, '//iframe[contains(@title, "challenge")]')
+    go_to_recaptcha_iframe(driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     random_num = random.randint(100000, 999999)
@@ -323,7 +323,7 @@ def solve_recaptcha(driver):
                 for i in range(200):
                     try:
                         go_to_recaptcha_iframe(
-                            driver, '//iframe[contains(@title, "challenge")]')
+                            driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
                         reload = WebDriverWait(driver, 0.1).until(
                             EC.element_to_be_clickable((By.ID, 'recaptcha-reload-button')))
                         solved = False
@@ -454,7 +454,7 @@ def solve_recaptcha(driver):
             for i in range(200):
                 try:
                     go_to_recaptcha_iframe(
-                        driver, '//iframe[contains(@title, "challenge")]')
+                        driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
                     WebDriverWait(driver, 0.1).until(
                         EC.presence_of_element_located(
                             (By.XPATH, '//button[@id="recaptcha-verify-button" and not(contains(@class, "rc-button-default-disabled"))]'))
@@ -480,7 +480,7 @@ def solve_recaptcha(driver):
                 break
             else:
                 go_to_recaptcha_iframe(
-                    driver, '//iframe[contains(@title, "challenge")]')
+                    driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
 
         except Exception as e:
             print(e)
@@ -490,6 +490,6 @@ def solve_recaptcha(driver):
                 WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
                     (By.XPATH, '//div[@class="recaptcha-checkbox-border"]'))).click()
 
-                go_to_recaptcha_iframe(driver, '//iframe[contains(@title, "challenge")]')
+                go_to_recaptcha_iframe(driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
             except:
                 ...
