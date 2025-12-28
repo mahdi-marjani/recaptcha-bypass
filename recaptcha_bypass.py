@@ -23,7 +23,7 @@ yolo_models = {
     "yolov8x": YOLO(models_directory.joinpath("yolov8x.pt")),
     "crosswalk": YOLO(models_directory.joinpath("crosswalk.pt")),
     "yolov8x-seg": YOLO(models_directory.joinpath("yolov8x-seg.pt")),
-    "yolov8x-oiv7": YOLO(models_directory.joinpath("yolov8x-oiv7.pt"))
+    "yolov8x-oiv7": YOLO(models_directory.joinpath("yolov8x-oiv7.pt")),
 }
 
 # Try loading an image with a model
@@ -55,7 +55,7 @@ def get_target_num(target_text):
         "traffic": 9,
         "crosswalk": 1001,
         "stair": 1002,
-        "taxi": 1003
+        "taxi": 1003,
     }
 
     for key, value in target_mapping.items():
@@ -81,16 +81,16 @@ def get_answers(target_num, timestamp):
     else:
         result = yolo_models["yolov8x"].predict(image)
 
-    target_index = [i for i, num in enumerate(
-        result[0].boxes.cls) if num == target_num]
+    target_index = [i for i, num in enumerate(result[0].boxes.cls) if num == target_num]
 
     answers = set()
 
     boxes = result[0].boxes.data
     for i in target_index:
         target_box = boxes[i]
-        xc, yc = (target_box[0] + target_box[2]) / \
-            2, (target_box[1] + target_box[3]) / 2
+        xc, yc = (target_box[0] + target_box[2]) / 2, (
+            target_box[1] + target_box[3]
+        ) / 2
 
         x_pos = int(xc / (image.shape[1] / 3))
         y_pos = int(yc / (image.shape[0] / 3))
@@ -103,8 +103,11 @@ def get_answers(target_num, timestamp):
 
 
 def get_all_captcha_img_urls(driver):
-    images = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located(
-        (By.XPATH, '//div[@id="rc-imageselect-target"]//img')))
+    images = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located(
+            (By.XPATH, '//div[@id="rc-imageselect-target"]//img')
+        )
+    )
 
     img_urls = []
     for img in images:
@@ -115,14 +118,17 @@ def get_all_captcha_img_urls(driver):
 
 def download_img(name, url, timestamp):
     response = requests.get(url, stream=True)
-    with open(images_directory.joinpath(f'{name}-{timestamp}.png'), 'wb') as out_file:
+    with open(images_directory.joinpath(f"{name}-{timestamp}.png"), "wb") as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
 
 
 def get_all_new_dynamic_captcha_img_urls(answers, before_img_urls, driver):
-    images = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located(
-        (By.XPATH, '//div[@id="rc-imageselect-target"]//img')))
+    images = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located(
+            (By.XPATH, '//div[@id="rc-imageselect-target"]//img')
+        )
+    )
     img_urls = []
 
     for img in images:
@@ -149,18 +155,24 @@ def paste_new_img_on_main_img(main, new, loc, timestamp):
     paste = np.copy(main)
 
     section_sizes = {
-        1: (0, 0), 2: (0, 1), 3: (0, 2),
-        4: (1, 0), 5: (1, 1), 6: (1, 2),
-        7: (2, 0), 8: (2, 1), 9: (2, 2)
+        1: (0, 0),
+        2: (0, 1),
+        3: (0, 2),
+        4: (1, 0),
+        5: (1, 1),
+        6: (1, 2),
+        7: (2, 0),
+        8: (2, 1),
+        9: (2, 2),
     }
 
     section_row, section_col = section_sizes.get(loc, (0, 0))
     height, width = paste.shape[0] // 3, paste.shape[1] // 3
     start_row, start_col = section_row * height, section_col * width
-    paste[start_row:start_row + height, start_col:start_col + width] = new
+    paste[start_row : start_row + height, start_col : start_col + width] = new
 
     paste = cv2.cvtColor(paste, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(str(images_directory.joinpath(f'0-{timestamp}.png')), paste)
+    cv2.imwrite(str(images_directory.joinpath(f"0-{timestamp}.png")), paste)
 
 
 def get_occupied_cells(vertices):
@@ -219,9 +231,8 @@ def get_answers_4(target_num, timestamp):
         answers = []
 
         for i in target_index:
-            if (result_seg[0].masks is not None):
-                mask_raw = result_seg[0].masks[i].cpu(
-                ).data.numpy().transpose(1, 2, 0)
+            if result_seg[0].masks is not None:
+                mask_raw = result_seg[0].masks[i].cpu().data.numpy().transpose(1, 2, 0)
                 mask_3channel = cv2.merge((mask_raw, mask_raw, mask_raw))
                 h2, w2, c2 = result_seg[0].orig_img.shape
                 mask = cv2.resize(mask_3channel, (w2, h2))
@@ -231,9 +242,11 @@ def get_answers_4(target_num, timestamp):
                 mask = cv2.inRange(mask, lower_black, upper_black)
                 mask = cv2.bitwise_not(mask)
                 masked = cv2.bitwise_and(
-                    result_seg[0].orig_img, result_seg[0].orig_img, mask=mask)
+                    result_seg[0].orig_img, result_seg[0].orig_img, mask=mask
+                )
                 car_locations = detect_car_locations(
-                    masked, num_rows=4, num_columns=4, threshold=100)
+                    masked, num_rows=4, num_columns=4, threshold=100
+                )
                 position_indices = convert_to_position_indices(car_locations)
                 for indice in position_indices:
                     answers.append(indice)
@@ -263,8 +276,10 @@ def get_answers_4(target_num, timestamp):
         answers = []
         for i in target_index:
             target_box = boxes[i]
-            p1, p2 = (int(target_box[0]), int(target_box[1])), (int(
-                target_box[2]), int(target_box[3]))
+            p1, p2 = (int(target_box[0]), int(target_box[1])), (
+                int(target_box[2]),
+                int(target_box[3]),
+            )
             x1, y1 = p1
             x4, y4 = p2
             x2 = x4
@@ -276,8 +291,10 @@ def get_answers_4(target_num, timestamp):
             four_cells = []
             for i in target_index:
                 target_box = boxes[i]
-                p1, p2 = (int(target_box[0]), int(target_box[1])), (int(
-                    target_box[2]), int(target_box[3]))
+                p1, p2 = (int(target_box[0]), int(target_box[1])), (
+                    int(target_box[2]),
+                    int(target_box[3]),
+                )
                 x1, y1 = p1
                 x4, y4 = p2
 
@@ -307,10 +324,16 @@ def get_answers_4(target_num, timestamp):
 def solve_recaptcha(driver):
     go_to_recaptcha_iframe(driver, '//iframe[@title="reCAPTCHA"]')
 
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
-        (By.XPATH, '//div[@class="recaptcha-checkbox-border"]'))).click()
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, '//div[@class="recaptcha-checkbox-border"]')
+        )
+    ).click()
 
-    go_to_recaptcha_iframe(driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
+    go_to_recaptcha_iframe(
+        driver,
+        '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
+    )
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     random_num = random.randint(100000, 999999)
@@ -323,15 +346,28 @@ def solve_recaptcha(driver):
                 for i in range(200):
                     try:
                         go_to_recaptcha_iframe(
-                            driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
+                            driver,
+                            '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
+                        )
                         reload = WebDriverWait(driver, 0.1).until(
-                            EC.element_to_be_clickable((By.ID, 'recaptcha-reload-button')))
+                            EC.element_to_be_clickable(
+                                (By.ID, "recaptcha-reload-button")
+                            )
+                        )
                         solved = False
                         break
                     except:
-                        go_to_recaptcha_iframe(
-                            driver, '//iframe[@title="reCAPTCHA"]')
-                        if WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//span[@id="recaptcha-anchor"]'))).get_attribute("aria-checked") == 'true':
+                        go_to_recaptcha_iframe(driver, '//iframe[@title="reCAPTCHA"]')
+                        if (
+                            WebDriverWait(driver, 10)
+                            .until(
+                                EC.presence_of_element_located(
+                                    (By.XPATH, '//span[@id="recaptcha-anchor"]')
+                                )
+                            )
+                            .get_attribute("aria-checked")
+                            == "true"
+                        ):
                             solved = True
                             break
                         else:
@@ -340,12 +376,13 @@ def solve_recaptcha(driver):
                     break
 
                 reload = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.ID, 'recaptcha-reload-button')))
+                    EC.element_to_be_clickable((By.ID, "recaptcha-reload-button"))
+                )
                 title_wrapper = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.ID, 'rc-imageselect')))
+                    EC.presence_of_element_located((By.ID, "rc-imageselect"))
+                )
 
-                target_text = title_wrapper.find_element(
-                    By.XPATH, './/strong').text
+                target_text = title_wrapper.find_element(By.XPATH, ".//strong").text
                 target_num = get_target_num(target_text)
 
                 if target_num == 1000:
@@ -384,8 +421,11 @@ def solve_recaptcha(driver):
                         break
                     else:
                         reload.click()
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
-                    (By.XPATH, '(//div[@id="rc-imageselect-target"]//td)[1]')))
+                WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, '(//div[@id="rc-imageselect-target"]//td)[1]')
+                    )
+                )
 
             if solved:
                 print("Solved")
@@ -393,13 +433,20 @@ def solve_recaptcha(driver):
                 break
             if captcha == "dynamic":
                 for answer in answers:
-                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
-                        (By.XPATH, f'(//div[@id="rc-imageselect-target"]//td)[{answer}]'))).click()
+                    WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable(
+                            (
+                                By.XPATH,
+                                f'(//div[@id="rc-imageselect-target"]//td)[{answer}]',
+                            )
+                        )
+                    ).click()
                 while True:
                     before_img_urls = img_urls
                     while True:
                         is_new, img_urls = get_all_new_dynamic_captcha_img_urls(
-                            answers, before_img_urls, driver)
+                            answers, before_img_urls, driver
+                        )
                         if is_new:
                             break
 
@@ -413,17 +460,23 @@ def solve_recaptcha(driver):
                         try:
                             for answer in answers:
                                 main_img = Image.open(
-                                    images_directory.joinpath(f"0-{timestamp}.png"))
-                                new_img = Image.open(images_directory.joinpath(
-                                    f"{answer}-{timestamp}.png"))
+                                    images_directory.joinpath(f"0-{timestamp}.png")
+                                )
+                                new_img = Image.open(
+                                    images_directory.joinpath(
+                                        f"{answer}-{timestamp}.png"
+                                    )
+                                )
                                 location = answer
                                 paste_new_img_on_main_img(
-                                    main_img, new_img, location, timestamp)
+                                    main_img, new_img, location, timestamp
+                                )
                             break
                         except:
                             while True:
                                 is_new, img_urls = get_all_new_dynamic_captcha_img_urls(
-                                    answers, before_img_urls, driver)
+                                    answers, before_img_urls, driver
+                                )
                                 if is_new:
                                     break
                             new_img_index_urls = []
@@ -431,40 +484,66 @@ def solve_recaptcha(driver):
                                 new_img_index_urls.append(answer - 1)
 
                             for index in new_img_index_urls:
-                                download_img(
-                                    index + 1, img_urls[index], timestamp)
+                                download_img(index + 1, img_urls[index], timestamp)
 
                     answers = get_answers(target_num, timestamp)
 
                     if len(answers) >= 1:
                         for answer in answers:
-                            WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
-                                (By.XPATH, f'(//div[@id="rc-imageselect-target"]//td)[{answer}]'))).click()
+                            WebDriverWait(driver, 10).until(
+                                EC.element_to_be_clickable(
+                                    (
+                                        By.XPATH,
+                                        f'(//div[@id="rc-imageselect-target"]//td)[{answer}]',
+                                    )
+                                )
+                            ).click()
                     else:
                         break
             elif captcha == "selection" or captcha == "squares":
                 for answer in answers:
-                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
-                        (By.XPATH, f'(//div[@id="rc-imageselect-target"]//td)[{answer}]'))).click()
+                    WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable(
+                            (
+                                By.XPATH,
+                                f'(//div[@id="rc-imageselect-target"]//td)[{answer}]',
+                            )
+                        )
+                    ).click()
 
-            verify = WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
-                (By.ID, "recaptcha-verify-button")))
+            verify = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "recaptcha-verify-button"))
+            )
             verify.click()
 
             for i in range(200):
                 try:
                     go_to_recaptcha_iframe(
-                        driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
+                        driver,
+                        '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
+                    )
                     WebDriverWait(driver, 0.1).until(
                         EC.presence_of_element_located(
-                            (By.XPATH, '//button[@id="recaptcha-verify-button" and not(contains(@class, "rc-button-default-disabled"))]'))
+                            (
+                                By.XPATH,
+                                '//button[@id="recaptcha-verify-button" and not(contains(@class, "rc-button-default-disabled"))]',
+                            )
+                        )
                     )
                     solved = False
                     break
                 except:
-                    go_to_recaptcha_iframe(
-                        driver, '//iframe[@title="reCAPTCHA"]')
-                    if WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//span[@id="recaptcha-anchor"]'))).get_attribute("aria-checked") == 'true':
+                    go_to_recaptcha_iframe(driver, '//iframe[@title="reCAPTCHA"]')
+                    if (
+                        WebDriverWait(driver, 10)
+                        .until(
+                            EC.presence_of_element_located(
+                                (By.XPATH, '//span[@id="recaptcha-anchor"]')
+                            )
+                        )
+                        .get_attribute("aria-checked")
+                        == "true"
+                    ):
                         solved = True
                         break
                     else:
@@ -480,16 +559,24 @@ def solve_recaptcha(driver):
                 break
             else:
                 go_to_recaptcha_iframe(
-                    driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
+                    driver,
+                    '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
+                )
 
         except Exception as e:
             print(e)
             try:
                 go_to_recaptcha_iframe(driver, '//iframe[@title="reCAPTCHA"]')
 
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
-                    (By.XPATH, '//div[@class="recaptcha-checkbox-border"]'))).click()
+                WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable(
+                        (By.XPATH, '//div[@class="recaptcha-checkbox-border"]')
+                    )
+                ).click()
 
-                go_to_recaptcha_iframe(driver, '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]')
+                go_to_recaptcha_iframe(
+                    driver,
+                    '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
+                )
             except:
                 ...
