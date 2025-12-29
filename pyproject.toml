@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recaptcha-bypass"
+version = "0.1.0"
+description = "A tool to bypass reCAPTCHA using Selenium and YOLO"
+authors = [{name = "Mahdi Marjani", email = "mahdi.marjani.dev@gmail.com"}]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy==2.2.6",
+    "opencv-python==4.12.0.88",
+    "Pillow==12.0.0",
+    "requests==2.32.5",
+    "selenium==4.39.0",
+    "ultralytics==8.3.241",
+    "webdriver-manager==4.0.2",
+]
+
+[tool.setuptools]
+packages = ["recaptcha_bypass"]
+package-dir = {"" = "src"}
