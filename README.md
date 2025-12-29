@@ -14,8 +14,8 @@ https://github.com/hooshmang/recaptcha-bypass/assets/129745867/024b82eb-1dc7-4f3
 ## Installation
 
 ```bash
-git clone https://github.com/mahdi-marjani/mahdi-marjani-recaptcha-bypass.git
-cd mahdi-marjani-recaptcha-bypass
+git clone https://github.com/mahdi-marjani/recaptcha-bypass.git
+cd recaptcha-bypass
 pip install -r requirements.txt
 ```
 
