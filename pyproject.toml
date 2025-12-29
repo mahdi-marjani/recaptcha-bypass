@@ -24,3 +24,9 @@ dependencies = [
 [tool.setuptools]
 packages = ["recaptcha_bypass"]
 package-dir = {"" = "src"}
+
+[project.urls]
+Homepage = "https://github.com/mahdi-marjani/recaptcha-bypass"
+Documentation = "https://github.com/mahdi-marjani/recaptcha-bypass"
+Repository = "https://github.com/mahdi-marjani/recaptcha-bypass.git"
+Issues = "https://github.com/mahdi-marjani/recaptcha-bypass/issues"
