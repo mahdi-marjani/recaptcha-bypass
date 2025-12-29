@@ -1,4 +1,6 @@
 import re
+import numpy as np
+from PIL import Image
 from pathlib import Path
 from ultralytics import YOLO
 from .model_downloader import download_model_if_missing
@@ -39,3 +41,8 @@ def get_target_num(target_text):
         if re.search(key, target_text) is not None:
             return value
     return 1000
+
+
+test_image = Image.new("RGB", (300, 300), color="white")
+test_image = np.asarray(test_image)
+YOLO_MODELS["yolo11x"].predict(test_image)
