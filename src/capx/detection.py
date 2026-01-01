@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from math import ceil
+import math
 from PIL import Image
 from .config import YOLO_MODELS, IMAGES_DIRECTORY
 from .utils import find_object_locations, locations_to_numbers, find_filled_cells
@@ -115,34 +115,39 @@ def get_answers_4(target_num, timestamp):
             y3 = y4
             xys = [x1, y1, x2, y2, x3, y3, x4, y4]
 
+            width = image.shape[0]
+            cell_size = width / 4.0
+
+            points = [(xys[2*i], xys[2*i+1]) for i in range(4)]
+            max_x = max(p[0] for p in points)
+            max_y = max(p[1] for p in points)
+
             four_cells = []
-            for i in target_index:
-                target_box = boxes[i]
-                p1, p2 = (int(target_box[0]), int(target_box[1])), (
-                    int(target_box[2]),
-                    int(target_box[3]),
-                )
-                x1, y1 = p1
-                x4, y4 = p2
+            for i in range(4):
+                x, y = points[i]
+                
+                is_right = math.isclose(x, max_x)
+                is_bottom = math.isclose(y, max_y)
+                
+                row = math.floor(y / cell_size) + 1
+                col = math.floor(x / cell_size) + 1
+                
+                if math.isclose(y % cell_size, 0):
+                    if is_bottom:
+                        row -= 1
+                
+                if math.isclose(x % cell_size, 0):
+                    if is_right:
+                        col -= 1
+                
+                row = max(1, min(4, row))
+                col = max(1, min(4, col))
+                
+                cell_number = (row - 1) * 4 + col
+                four_cells.append(cell_number)
 
-                x2 = x4
-                y2 = y1
-                x3 = x1
-                y3 = y4
-
-                four_cells = []
-
-                for i in range(4):
-                    x = xys[i * 2]
-                    y = xys[(i * 2) + 1]
-                    cell_size = image.shape[1] / 4
-                    row = ceil(y / cell_size)
-                    column = ceil(x / cell_size)
-                    cell_number = (row - 1) * 4 + column
-                    four_cells.append(cell_number)
-
-                answer = find_filled_cells(four_cells)
-                for ans in answer:
-                    answers.append(ans)
+            answer = find_filled_cells(four_cells)
+            for ans in answer:
+                answers.append(ans)
         answers = sorted(list(answers))
         return list(set(answers))
