@@ -1,11 +1,11 @@
 import random
 from datetime import datetime
-from os import listdir, remove
+from os import listdir, remove, rename
 import re
 from PIL import Image
 from .config import get_target_num, IMAGES_DIRECTORY
-from .utils import (go_to_recaptcha_iframe, get_all_captcha_img_urls, download_img,
-                    get_all_new_dynamic_captcha_img_urls, paste_new_img_on_main_img)
+from .utils import (switch_to_recaptcha_frame, get_all_image_urls, download_image,
+                    get_new_dynamic_image_urls, paste_image_on_main)
 from .detection import get_answers, get_answers_4
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -17,7 +17,7 @@ class RecaptchaSolver:
         self.timestamp = datetime.now().strftime("%Y%m%d%H%M%S") + f"_{random.randint(100000, 999999)}"
 
     def solve(self):
-        go_to_recaptcha_iframe(self.driver, '//iframe[@title="reCAPTCHA"]')
+        switch_to_recaptcha_frame(self.driver, '//iframe[@title="reCAPTCHA"]')
 
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable(
@@ -25,7 +25,7 @@ class RecaptchaSolver:
             )
         ).click()
 
-        go_to_recaptcha_iframe(
+        switch_to_recaptcha_frame(
             self.driver,
             '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
         )
@@ -36,7 +36,7 @@ class RecaptchaSolver:
                     solved = False
                     for i in range(200):
                         try:
-                            go_to_recaptcha_iframe(
+                            switch_to_recaptcha_frame(
                                 self.driver,
                                 '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
                             )
@@ -48,7 +48,7 @@ class RecaptchaSolver:
                             solved = False
                             break
                         except:
-                            go_to_recaptcha_iframe(self.driver, '//iframe[@title="reCAPTCHA"]')
+                            switch_to_recaptcha_frame(self.driver, '//iframe[@title="reCAPTCHA"]')
                             if (
                                 WebDriverWait(self.driver, 10)
                                 .until(
@@ -81,8 +81,8 @@ class RecaptchaSolver:
                         reload.click()
                     elif "squares" in title_wrapper.text:
                         print("Square captcha found....")
-                        img_urls = get_all_captcha_img_urls(self.driver)
-                        download_img(0, img_urls[0], self.timestamp)
+                        img_urls = get_all_image_urls(self.driver)
+                        download_image(0, img_urls[0], self.timestamp)
                         answers = get_answers_4(target_num, self.timestamp)
                         if len(answers) >= 1 and len(answers) < 16:
                             captcha = "squares"
@@ -90,10 +90,9 @@ class RecaptchaSolver:
                         else:
                             reload.click()
                     elif "none" in title_wrapper.text:
-                        print("Found a 3x3 dynamic captcha")
-                        img_urls = get_all_captcha_img_urls(self.driver)
+                        img_urls = get_all_image_urls(self.driver)
                         if len(set(img_urls)) == 1:
-                            download_img(0, img_urls[0], self.timestamp)
+                            download_image(0, img_urls[0], self.timestamp)
                             answers = get_answers(target_num, self.timestamp)
                             if len(answers) > 2:
                                 captcha = "dynamic"
@@ -104,8 +103,8 @@ class RecaptchaSolver:
                             reload.click()
                     else:
                         print("Found a 3x3 one-time selection captcha")
-                        img_urls = get_all_captcha_img_urls(self.driver)
-                        download_img(0, img_urls[0], self.timestamp)
+                        img_urls = get_all_image_urls(self.driver)
+                        download_image(0, img_urls[0], self.timestamp)
                         answers = get_answers(target_num, self.timestamp)
                         if len(answers) > 2:
                             captcha = "selection"
@@ -135,7 +134,7 @@ class RecaptchaSolver:
                     while True:
                         before_img_urls = img_urls
                         while True:
-                            is_new, img_urls = get_all_new_dynamic_captcha_img_urls(
+                            is_new, img_urls = get_new_dynamic_image_urls(
                                 answers, before_img_urls, self.driver
                             )
                             if is_new:
@@ -146,7 +145,8 @@ class RecaptchaSolver:
                             new_img_index_urls.append(answer - 1)
 
                         for index in new_img_index_urls:
-                            download_img(index + 1, img_urls[index], self.timestamp)
+                            download_image(index + 1, img_urls[index], self.timestamp)
+
                         while True:
                             try:
                                 for answer in answers:
@@ -159,13 +159,13 @@ class RecaptchaSolver:
                                         )
                                     )
                                     location = answer
-                                    paste_new_img_on_main_img(
+                                    paste_image_on_main(
                                         main_img, new_img, location, self.timestamp
                                     )
                                 break
                             except:
                                 while True:
-                                    is_new, img_urls = get_all_new_dynamic_captcha_img_urls(
+                                    is_new, img_urls = get_new_dynamic_image_urls(
                                         answers, before_img_urls, self.driver
                                     )
                                     if is_new:
@@ -175,7 +175,7 @@ class RecaptchaSolver:
                                     new_img_index_urls.append(answer - 1)
 
                                 for index in new_img_index_urls:
-                                    download_img(index + 1, img_urls[index], self.timestamp)
+                                    download_image(index + 1, img_urls[index], self.timestamp)
 
                         answers = get_answers(target_num, self.timestamp)
 
@@ -209,7 +209,7 @@ class RecaptchaSolver:
 
                 for i in range(200):
                     try:
-                        go_to_recaptcha_iframe(
+                        switch_to_recaptcha_frame(
                             self.driver,
                             '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
                         )
@@ -224,7 +224,7 @@ class RecaptchaSolver:
                         solved = False
                         break
                     except:
-                        go_to_recaptcha_iframe(self.driver, '//iframe[@title="reCAPTCHA"]')
+                        switch_to_recaptcha_frame(self.driver, '//iframe[@title="reCAPTCHA"]')
                         if (
                             WebDriverWait(self.driver, 10)
                             .until(
@@ -246,7 +246,7 @@ class RecaptchaSolver:
                     self.driver.switch_to.default_content()
                     break
                 else:
-                    go_to_recaptcha_iframe(
+                    switch_to_recaptcha_frame(
                         self.driver,
                         '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
                     )
@@ -254,7 +254,7 @@ class RecaptchaSolver:
             except Exception as e:
                 print(e)
                 try:
-                    go_to_recaptcha_iframe(self.driver, '//iframe[@title="reCAPTCHA"]')
+                    switch_to_recaptcha_frame(self.driver, '//iframe[@title="reCAPTCHA"]')
 
                     WebDriverWait(self.driver, 10).until(
                         EC.element_to_be_clickable(
@@ -262,7 +262,7 @@ class RecaptchaSolver:
                         )
                     ).click()
 
-                    go_to_recaptcha_iframe(
+                    switch_to_recaptcha_frame(
                         self.driver,
                         '//iframe[contains(@title, "challenge") and contains(@title, "recaptcha")]',
                     )

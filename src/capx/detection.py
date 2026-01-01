@@ -3,7 +3,7 @@ import numpy as np
 from math import ceil
 from PIL import Image
 from .config import YOLO_MODELS, IMAGES_DIRECTORY
-from .utils import detect_car_locations, convert_to_position_indices, get_occupied_cells
+from .utils import find_object_locations, locations_to_numbers, find_filled_cells
 
 def get_answers(target_num, timestamp):
     image = Image.open(IMAGES_DIRECTORY.joinpath(f"0-{timestamp}.png"))
@@ -71,10 +71,10 @@ def get_answers_4(target_num, timestamp):
                 masked = cv2.bitwise_and(
                     result_seg[0].orig_img, result_seg[0].orig_img, mask=mask
                 )
-                car_locations = detect_car_locations(
-                    masked, num_rows=4, num_columns=4, threshold=100
+                car_locations = find_object_locations(
+                    masked, rows=4, cols=4, min_pixels=100
                 )
-                position_indices = convert_to_position_indices(car_locations)
+                position_indices = locations_to_numbers(car_locations)
                 for indice in position_indices:
                     answers.append(indice)
 
@@ -141,7 +141,7 @@ def get_answers_4(target_num, timestamp):
                     cell_number = (row - 1) * 4 + column
                     four_cells.append(cell_number)
 
-                answer = get_occupied_cells(four_cells)
+                answer = find_filled_cells(four_cells)
                 for ans in answer:
                     answers.append(ans)
         answers = sorted(list(answers))
