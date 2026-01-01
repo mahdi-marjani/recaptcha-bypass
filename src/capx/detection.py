@@ -10,16 +10,16 @@ def get_answers(target_num, timestamp):
     image = np.asarray(image)
 
     if target_num == 1001:
-        result = YOLO_MODELS["crosswalk"].predict(image)
+        result = YOLO_MODELS["crosswalk"].predict(image, conf=0.4)
         target_num = 0
     elif target_num == 1002:
-        result = YOLO_MODELS["yolov8x-oiv7"].predict(image)
+        result = YOLO_MODELS["yolov8x-oiv7"].predict(image, conf=0.4)
         target_num = 489
     elif target_num == 1003:
-        result = YOLO_MODELS["yolov8x-oiv7"].predict(image)
+        result = YOLO_MODELS["yolov8x-oiv7"].predict(image, conf=0.4)
         target_num = 522
     else:
-        result = YOLO_MODELS["yolo11x"].predict(image)
+        result = YOLO_MODELS["yolo11x"].predict(image, conf=0.4)
 
     target_index = [i for i, num in enumerate(result[0].boxes.cls) if num == target_num]
 
@@ -46,7 +46,7 @@ def get_answers_4(target_num, timestamp):
     image = np.asarray(image)
 
     if target_num < 1000:
-        result_seg = YOLO_MODELS["yolo11x-seg"].predict(image)
+        result_seg = YOLO_MODELS["yolo11x-seg"].predict(image, conf=0.4)
 
         target_index = []
         count = 0
@@ -82,13 +82,13 @@ def get_answers_4(target_num, timestamp):
         return list(set(answers))
     else:
         if target_num == 1001:
-            result = YOLO_MODELS["crosswalk"].predict(image)
+            result = YOLO_MODELS["crosswalk"].predict(image, conf=0.4)
             target_num = 0
         elif target_num == 1002:
-            result = YOLO_MODELS["yolov8x-oiv7"].predict(image)
+            result = YOLO_MODELS["yolov8x-oiv7"].predict(image, conf=0.4)
             target_num = 489
         elif target_num == 1003:
-            result = YOLO_MODELS["yolov8x-oiv7"].predict(image)
+            result = YOLO_MODELS["yolov8x-oiv7"].predict(image, conf=0.4)
             target_num = 522
 
         boxes = result[0].boxes.data
