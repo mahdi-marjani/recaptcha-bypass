@@ -1,8 +1,8 @@
-import random
-from datetime import datetime
-from os import listdir, remove, rename
+import os
 import re
+import random
 from PIL import Image
+from datetime import datetime
 from .config import get_target_num, IMAGES_DIRECTORY
 from .utils import (switch_to_recaptcha_frame, get_all_image_urls, download_image,
                     get_new_dynamic_image_urls, paste_image_on_main)
@@ -271,7 +271,7 @@ class RecaptchaSolver:
 
 
     def _cleanup_images(self):
-        list_images = listdir(IMAGES_DIRECTORY)
+        list_images = os.listdir(IMAGES_DIRECTORY)
         for image in list_images:
             if re.search(self.timestamp, image):
-                remove(IMAGES_DIRECTORY / image)
+                os.remove(IMAGES_DIRECTORY / image)
