@@ -6,7 +6,7 @@ from PIL import Image
 from .config import get_target_num, IMAGES_DIRECTORY
 from .utils import (switch_to_recaptcha_frame, get_all_image_urls, download_image,
                     get_new_dynamic_image_urls, paste_image_on_main)
-from .detection import get_answers, get_answers_4
+from .detection import detect_cells_3x3, detect_cells_4x4
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -83,7 +83,7 @@ class RecaptchaSolver:
                         print("Square captcha found....")
                         img_urls = get_all_image_urls(self.driver)
                         download_image(0, img_urls[0], self.timestamp)
-                        answers = get_answers_4(target_num, self.timestamp)
+                        answers = detect_cells_4x4(target_num, self.timestamp)
                         if len(answers) >= 1 and len(answers) < 16:
                             captcha = "squares"
                             break
@@ -93,7 +93,7 @@ class RecaptchaSolver:
                         img_urls = get_all_image_urls(self.driver)
                         if len(set(img_urls)) == 1:
                             download_image(0, img_urls[0], self.timestamp)
-                            answers = get_answers(target_num, self.timestamp)
+                            answers = detect_cells_3x3(target_num, self.timestamp)
                             if len(answers) > 2:
                                 captcha = "dynamic"
                                 break
@@ -105,7 +105,7 @@ class RecaptchaSolver:
                         print("Found a 3x3 one-time selection captcha")
                         img_urls = get_all_image_urls(self.driver)
                         download_image(0, img_urls[0], self.timestamp)
-                        answers = get_answers(target_num, self.timestamp)
+                        answers = detect_cells_3x3(target_num, self.timestamp)
                         if len(answers) > 2:
                             captcha = "selection"
                             break
@@ -177,7 +177,7 @@ class RecaptchaSolver:
                                 for index in new_img_index_urls:
                                     download_image(index + 1, img_urls[index], self.timestamp)
 
-                        answers = get_answers(target_num, self.timestamp)
+                        answers = detect_cells_3x3(target_num, self.timestamp)
 
                         if len(answers) >= 1:
                             for answer in answers:
