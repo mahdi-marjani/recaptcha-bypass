@@ -23,11 +23,6 @@ venv\Scripts\activate
 pip install capx
 ```
 
-(For the latest dev version straight from GitHub:)
-```bash
-pip install git+https://github.com/mahdi-marjani/capx.git
-```
-
 ### 3. Quick example
 ```python
 from selenium import webdriver

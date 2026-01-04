@@ -1,31 +1,21 @@
-import os
-import re
-import random
-from datetime import datetime
-from PIL import Image
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from .config import get_target_num, IMAGES_DIRECTORY
 from .utils import (
     switch_to_recaptcha_frame,
     get_all_image_urls,
-    download_image,
+    get_image_array,
     get_new_dynamic_image_urls,
     paste_image_on_main,
 )
-from .detection import detect_cells_3x3, detect_cells_4x4
+
+from .local_ai import is_model_available, detect
 
 
 class RecaptchaSolver:
     def __init__(self, driver):
         self.driver = driver
-        self.timestamp = (
-            datetime.now().strftime("%Y%m%d%H%M%S")
-            + f"_{random.randint(100000, 999999)}"
-        )
 
     # =========================
     # Public API
@@ -47,14 +37,14 @@ class RecaptchaSolver:
                     self._finalize()
                     break
 
-                captcha_type, target_num, answers = self._analyze_challenge()
+                captcha_type, target_text, answers, main_image_array = self._analyze_challenge()
 
                 if captcha_type is None:
                     self._reload()
                     continue
 
                 if captcha_type == "dynamic":
-                    self._solve_dynamic(target_num, answers)
+                    self._solve_dynamic(target_text, answers, main_image_array)
                 else:
                     self._click_answers(answers)
 
@@ -107,61 +97,60 @@ class RecaptchaSolver:
         )
 
         target_text = title_wrapper.find_element(By.XPATH, ".//strong").text
-        target_num = get_target_num(target_text)
 
-        if target_num == 1000:
-            return None, None, None
+        if not is_model_available(target_text):
+            return None, None, None, None
 
         if "squares" in title_wrapper.text:
-            return self._handle_4x4(target_num)
+            return self._handle_4x4(target_text)
 
         if "none" in title_wrapper.text:
-            return self._handle_dynamic_3x3(target_num)
+            return self._handle_dynamic_3x3(target_text)
 
-        return self._handle_static_3x3(target_num)
+        return self._handle_static_3x3(target_text)
 
     # =========================
     # CAPTCHA type handlers
     # =========================
 
-    def _handle_4x4(self, target_num):
+    def _handle_4x4(self, target_text):
         img_urls = get_all_image_urls(self.driver)
-        download_image(0, img_urls[0], self.timestamp)
+        main_image_array = get_image_array(img_urls[0])
 
-        answers = detect_cells_4x4(target_num, self.timestamp)
+        answers = detect(main_image_array, "4x4", target_text)
         if 1 <= len(answers) < 16:
-            return "squares", target_num, answers
+            return "squares", target_text, answers, main_image_array
 
-        return None, None, None
+        return None, None, None, None
 
-    def _handle_dynamic_3x3(self, target_num):
+    def _handle_dynamic_3x3(self, target_text):
         img_urls = get_all_image_urls(self.driver)
         if len(set(img_urls)) != 1:
             return None, None, None
 
-        download_image(0, img_urls[0], self.timestamp)
-        answers = detect_cells_3x3(target_num, self.timestamp)
+        main_image_array = get_image_array(img_urls[0])
+        answers = detect(main_image_array, "3x3", target_text)
 
         if len(answers) > 2:
-            return "dynamic", target_num, answers
+            return "dynamic", target_text, answers, main_image_array
 
-        return None, None, None
+        return None, None, None, None
 
-    def _handle_static_3x3(self, target_num):
+    def _handle_static_3x3(self, target_text):
         img_urls = get_all_image_urls(self.driver)
-        download_image(0, img_urls[0], self.timestamp)
+        main_image_array = get_image_array(img_urls[0])
 
-        answers = detect_cells_3x3(target_num, self.timestamp)
+        answers = detect(main_image_array, "3x3", target_text)
         if len(answers) > 2:
-            return "selection", target_num, answers
+            return "selection", target_text, answers, main_image_array
 
-        return None, None, None
+        return None, None, None, None
 
     # =========================
     # Solvers
     # =========================
 
-    def _solve_dynamic(self, target_num, answers):
+    def _solve_dynamic(self, target_text, answers, main_image_array):
         self._click_answers(answers)
 
         while True:
@@ -170,10 +159,10 @@ class RecaptchaSolver:
                 answers, old_urls
             )
 
-            self._download_dynamic_images(answers, new_urls)
-            self._merge_dynamic_images(answers)
+            new_images_array = self._download_dynamic_images(answers, new_urls)
+            main_image_array = self._merge_dynamic_images(answers, main_image_array, new_images_array)
 
-            answers = detect_cells_3x3(target_num, self.timestamp)
+            answers = detect(main_image_array, "3x3", target_text)
             if not answers:
                 break
 
@@ -214,7 +203,6 @@ class RecaptchaSolver:
                 return False
             except Exception:
                 if self._is_checkbox_checked():
-                    self._cleanup_images()
                     return True
 
         return False
@@ -232,24 +220,20 @@ class RecaptchaSolver:
                 return is_new, new_urls
 
     def _download_dynamic_images(self, answers, img_urls):
+        new_images_array = {}
         for answer in answers:
             idx = answer - 1
-            download_image(answer, img_urls[idx], self.timestamp)
+            new_images_array[answer] = get_image_array(img_urls[idx])
+        
+        return new_images_array
 
-    def _merge_dynamic_images(self, answers):
+    def _merge_dynamic_images(self, answers, main_image_array, new_images_array):
         while True:
             try:
                 for answer in answers:
-                    main_img = Image.open(
-                        IMAGES_DIRECTORY / f"0-{self.timestamp}.png"
-                    )
-                    new_img = Image.open(
-                        IMAGES_DIRECTORY / f"{answer}-{self.timestamp}.png"
-                    )
-                    paste_image_on_main(
-                        main_img, new_img, answer, self.timestamp
-                    )
-                return
+                    new_image_array = new_images_array[answer]
+                    main_image_array = paste_image_on_main(main_image_array, new_image_array, answer)
+                return main_image_array
             except Exception:
                 continue
 
@@ -290,12 +274,3 @@ class RecaptchaSolver:
 
     def _finalize(self):
         self.driver.switch_to.default_content()
-
-    # =========================
-    # Cleanup
-    # =========================
-
-    def _cleanup_images(self):
-        for image in os.listdir(IMAGES_DIRECTORY):
-            if re.search(self.timestamp, image):
-                os.remove(IMAGES_DIRECTORY / image)
