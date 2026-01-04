@@ -1,4 +1,3 @@
-from PIL import Image
 from capx_core.detector import detect_cells
 
 AVAILABLE_MODELS = [
@@ -30,10 +29,9 @@ def detect(image_array, grid, target_text):
     :param target_text: Text to detect or target in the image.
     :return: List of detected cells from the capx core.
     """
-    image = Image.fromarray(image_array)
     
     cells = detect_cells(
-        image=image,
+        image=image_array,
         grid=grid,
         target_text=target_text
     )
