@@ -1,6 +1,6 @@
 # reCAPTCHA v2 Image Solver
 
-Simple Python tool that auto-solves Google's reCAPTCHA v2 "select all squares" puzzles using Selenium + YOLO.
+reCAPTCHA v2 Image Solver using YOLO and Selenium.
 
 https://github.com/user-attachments/assets/22308be7-3a90-4757-8799-b47008b32bf0
 
