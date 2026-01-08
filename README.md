@@ -28,7 +28,7 @@ pip install capx
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
-from capx import RecaptchaSolver
+from capx.solver import RecaptchaSolver
 
 driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
 driver.get("https://www.google.com/recaptcha/api2/demo")
@@ -36,6 +36,7 @@ driver.get("https://www.google.com/recaptcha/api2/demo")
 solver = RecaptchaSolver(driver)
 solver.solve()  # Done!
 
+print("reCAPTCHA solved!")
 input("Press Enter to quit...")
 driver.quit()
 ```
