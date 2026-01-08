@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "capx"
-version = "0.1.4"
+version = "0.1.5"
 description = "reCAPTCHA v2 Image Solver using YOLO and Selenium"
 authors = [{name = "Mahdi Marjani", email = "mahdi.marjani.dev@gmail.com"}]
 license = "MIT"
